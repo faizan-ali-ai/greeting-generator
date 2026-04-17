@@ -1,0 +1,286 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Greeting Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+--bg: #050505;
+--accent: #00d2ff;
+--card-bg: rgba(15, 15, 20, 0.8);
+--border: rgba(0, 210, 255, 0.2);
+--text: #e0e0e0;
+}
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+#starCanvas {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 38px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -1px;
+    min-height: 50px; 
+}
+
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 0 40px rgba(0, 210, 255, 0.1);
+}
+
+.label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 15px;
+    display: block;
+    font-weight: 600;
+}
+
+input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    color: white;
+    font-size: 16px;
+    outline: none;
+    transition: 0.3s;
+    margin-bottom: 20px;
+}
+
+input:focus {
+    border-color: var(--accent);
+    background: rgba(0, 210, 255, 0.05);
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+button:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px rgba(0, 210, 255, 0.4);
+}
+
+button:disabled {
+    background: #333;
+    color: #777;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#result-box {
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border-left: 3px solid var(--accent);
+    display: none;
+}
+
+#greeting-text {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #fff;
+}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div class="container">
+<div class="header">
+<h1 id="mainTitle"></h1>
+</div>
+<div class="card">
+    <span class="label">Name</span>
+    <input type="text" id="nameInput" placeholder="ENTER NAME..." autocomplete="off">
+    
+    <button id="genBtn" onclick="generate()">Execute</button>
+
+    <div id="result-box">
+        <div id="greeting-text"></div>
+    </div>
+</div>
+</div>
+<script>
+const canvas = document.getElementById('starCanvas');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function resize() {
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+window.onresize = resize;
+resize();
+
+class Star {
+constructor() {
+this.reset();
+}
+reset() {
+this.x = Math.random() * canvas.width;
+this.y = Math.random() * -canvas.height;
+this.size = Math.random() * 2 + 1;
+this.speed = Math.random() * 3 + 2;
+this.length = Math.random() * 80 + 30;
+}
+update() {
+this.y += this.speed;
+this.x += this.speed * 0.5;
+if (this.y > canvas.height) this.reset();
+}
+draw() {
+ctx.beginPath();
+ctx.strokeStyle = `rgba(0, 210, 255, ${Math.random() * 0.5})`;
+ctx.lineWidth = this.size;
+ctx.moveTo(this.x, this.y);
+ctx.lineTo(this.x - this.length * 0.5, this.y - this.length);
+ctx.stroke();
+}
+}
+
+for (let i = 0; i < 15; i++) stars.push(new Star());
+
+function animateStars() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+stars.forEach(s => { s.update(); s.draw(); });
+requestAnimationFrame(animateStars);
+}
+animateStars();
+
+const titleText = "Greeting Engine";
+let titleIdx = 0;
+
+function typeTitle() {
+if (titleIdx < titleText.length) {
+document.getElementById('mainTitle').innerHTML += titleText.charAt(titleIdx);
+titleIdx++;
+setTimeout(typeTitle, 150);
+}
+}
+window.onload = typeTitle;
+
+function typeEffect(element, text) {
+let i = 0;
+element.innerHTML = "";
+const timer = setInterval(() => {
+if (i < text.length) {
+element.innerHTML += text.charAt(i);
+i++;
+} else {
+clearInterval(timer);
+}
+}, 50);
+}
+
+async function generate() {
+const name = document.getElementById('nameInput').value.trim();
+const btn = document.getElementById('genBtn');
+const resultBox = document.getElementById('result-box');
+const output = document.getElementById('greeting-text');
+
+if (!name) return;
+
+btn.disabled = true;
+btn.textContent = "Processing...";
+resultBox.style.display = "none";
+output.innerHTML = "";
+
+try {
+const response = await fetch('/generate/', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'X-CSRFToken': getCookie('csrftoken')
+},
+body: JSON.stringify({ name })
+});
+
+const data = await response.json();
+resultBox.style.display = "block";
+typeEffect(output, data.greeting);
+
+} catch (e) {
+resultBox.style.display = "block";
+output.innerHTML = "Error: Sequence Failed.";
+} finally {
+btn.disabled = false;
+btn.textContent = "Execute";
+}
+}
+
+function getCookie(name) {
+let cookieValue = null;
+if (document.cookie && document.cookie !== '') {
+const cookies = document.cookie.split(';');
+for (let i = 0; i < cookies.length; i++) {
+const cookie = cookies[i].trim();
+if (cookie.substring(0, name.length + 1) === (name + '=')) {
+cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+break;
+}
+}
+}
+return cookieValue;
+}
+</script>
+</body>
+</html>
